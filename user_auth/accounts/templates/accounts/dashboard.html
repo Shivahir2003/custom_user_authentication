@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title_content %}
+   dashboard
+{% endblock title_content %}
+
+{% block body_content %}
+    
+    <h1>Dash board </h1>
+     
+    {% if request.user.is_authenticated %}
+    <ul>
+        <li>username : {{user.username}}</li>
+        <li>email id : {{user.email}}</li>
+    </ul>
+        
+    <button><a href="{% url 'accounts:logout'%}">Logout</a></button>
+    <button><a href="{% url 'accounts:forget_password_request'%}">reset password</a></button>
+    {% endif %}
+    <button><a href="{% url 'accounts:signup' %}">SignUp</a></button>
+
+{% endblock body_content %}

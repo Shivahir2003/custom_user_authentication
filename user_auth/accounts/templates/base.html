@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title_content %}
+        {% endblock title_content %}
+    </title>
+</head>
+<body>
+    {% block body_content %}
+        {% if messages %}
+            <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endblock body_content %}
+
+    {% block mail_content%}
+    {% endblock mail_content %}
+</body>
+</html>

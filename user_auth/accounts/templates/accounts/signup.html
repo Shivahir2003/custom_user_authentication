@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title_content %}
+   sign up
+{% endblock title_content %}
+
+{% block body_content %}
+    
+    <h1>sign up</h1>
+
+    
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        {{field.label_tag}}
+        {{field}}
+        <div></div>
+        {% if field.errors %}
+        {{field.errors}}
+        {% endif %}
+    {% endfor %}
+        <input type="submit" value="signup">
+    </form>
+    <p>already have an account <a href="{% url 'accounts:login'  %}">login</a> </p>
+
+{% endblock body_content %}

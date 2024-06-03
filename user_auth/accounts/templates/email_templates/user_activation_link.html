@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title_content %}
+    User activation link
+{% endblock title_content %}
+
+
+{% block mail_content%}
+<h1>activate user link</h1>
+
+<a href="http://127.0.0.1:8000/accounts/activate-user/{{uid}}/{{token}}">Activate user</a>
+{% endblock mail_content %}
