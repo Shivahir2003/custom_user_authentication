@@ -10,16 +10,28 @@
 
     
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% for field in form %}
+        <br>
+            {{field.label_tag}}
+            {{field}}
+            <div></div>
+            {% if field.errors %}
+                {{field.errors}}
+            {% endif %}
+        {% endfor %}
+
+        {% for field in user_details %}
+        <br>
         {{field.label_tag}}
         {{field}}
         <div></div>
         {% if field.errors %}
-        {{field.errors}}
+            {{field.errors}}
         {% endif %}
     {% endfor %}
+    <br>
         <input type="submit" value="signup">
     </form>
     <p>already have an account <a href="{% url 'accounts:login'  %}">login</a> </p>

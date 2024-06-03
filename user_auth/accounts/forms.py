@@ -2,6 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django import forms
+from accounts.models import UserProfile
 
 class UserSignUpForm(UserCreationForm):
     """ User Register form 
@@ -27,6 +28,18 @@ class UserSignUpForm(UserCreationForm):
             self.add_error("password2","Password does not match")
         return password2
 
+
+class UserProfileForm(forms.Form):
+    mobile_number = forms.CharField(max_length=10,required=True)
+    gender = forms.ChoiceField(choices=UserProfile.GENDER_CHOICES,required=True)
+    user_image = forms.FileField(required=False)
+
+    def clean_mobile_number(self):
+        mobile_number= self.cleaned_data['mobile_number']
+
+        if len(mobile_number) < 10:
+            self.error("mobile number must be 10 digit")
+        return mobile_number
 
 class UserLoginForm(forms.Form):
     """ User Login form """

@@ -10,8 +10,11 @@
      
     {% if request.user.is_authenticated %}
     <ul>
+        <img src='/media/{{user.userprofile.user_image}}' width="100px">
         <li>username : {{user.username}}</li>
         <li>email id : {{user.email}}</li>
+        <li>mobile_number: {{user.userprofile.mobile_number}}</li>
+        <li>gender: {{user.userprofile.gender}}</li>
     </ul>
         
     <button><a href="{% url 'accounts:logout'%}">Logout</a></button>

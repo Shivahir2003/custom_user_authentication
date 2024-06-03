@@ -4,8 +4,8 @@ import datetime
 
 class UserProfile(models.Model):
     GENDER_CHOICES ={
-        'M':'male',
-        'F':'female'
+        'm':'male',
+        'f':'female'
     }
     user = models.OneToOneField(User,null=True,blank=True, on_delete=models.CASCADE)
     mobile_number=models.CharField(max_length=10,null=True,blank=True,)

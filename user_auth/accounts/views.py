@@ -1,6 +1,7 @@
-from accounts.forms import UserSignUpForm,UserLoginForm,ChangePasswordForm
+from accounts.forms import UserSignUpForm,UserLoginForm,ChangePasswordForm,UserProfileForm
 from accounts.token import token_generator
 from accounts.utils import send_email
+from accounts.models import UserProfile
 
 from django.contrib import messages
 from django.contrib.auth import authenticate,login, logout
@@ -48,11 +49,15 @@ class UserAuthentication(TemplateView):
         """
         if request.method == "POST":
             signup_form = UserSignUpForm(request.POST or None)
-            if signup_form.is_valid():
+            user_details =UserProfileForm(request.POST,request.FILES)
+            if signup_form.is_valid() and user_details.is_valid():
                 username=signup_form.cleaned_data['username']
                 password=signup_form.cleaned_data['password1']
                 email=signup_form.cleaned_data['email']
-
+                mobile_number=user_details.cleaned_data['mobile_number']
+                gender=user_details.cleaned_data['gender']
+                user_image=user_details.cleaned_data['user_image']
+                
                 # check if user is exists then redirect to login view
                 if User.objects.filter(username=username).exists():
                     messages.error(request,'you have already signed up ')
@@ -63,8 +68,13 @@ class UserAuthentication(TemplateView):
                 uid=urlsafe_base64_encode(force_bytes(user.pk))
                 token = token_generator.make_token(user)
                 # adding user details
-
-                # sending mail for user activation link 
+                UserProfile.objects.create(
+                    user=user,
+                    mobile_number=mobile_number,
+                    gender=gender,
+                    user_image=user_image
+                )
+                # sending mail for user activation link
                 subject=f'user activation link for {user.username}'
                 html_content = render_to_string('email_templates/user_activation_link.html',{'token':token,'uid':uid})
                 text_content = strip_tags(html_content)
@@ -74,7 +84,8 @@ class UserAuthentication(TemplateView):
                 return redirect('accounts:login')
         elif request.method == "GET":
             signup_form = UserSignUpForm()
-        return render(request,"accounts/signup.html",{'form':signup_form})
+            user_details =UserProfileForm()
+        return render(request,"accounts/signup.html",{'form':signup_form,'user_details':user_details})
 
     def loginview(self,request):
         """ 
