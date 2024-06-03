@@ -40,6 +40,8 @@ class UserProfileForm(forms.Form):
 
         if len(mobile_number) < 10:
             self.error("mobile number must be 10 digit")
+        elif not mobile_number.isnumeric():
+            self.error("mobile number must be numeric")
         return mobile_number
 
 class UserLoginForm(forms.Form):
@@ -56,6 +58,7 @@ class ChangePasswordForm(forms.Form):
     new_password = forms.CharField(widget=forms.PasswordInput())
     confirm_password = forms.CharField(widget=forms.PasswordInput())
 
+
     def clean_new_password(self):
         new_password=self.cleaned_data['new_password']
 
@@ -69,3 +72,4 @@ class ChangePasswordForm(forms.Form):
         if new_password!=confirm_password:
             self.add_error("confirm_password","does not match with new password")
         return confirm_password
+

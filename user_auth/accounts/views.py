@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http.request import HttpRequest as HttpRequest
 from django.http.response import HttpResponse as HttpResponse
-from django.shortcuts import render,redirect,get_object_or_404
+from django.shortcuts import render,redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -197,25 +197,28 @@ class UserAuthentication(TemplateView):
         """
         # get user object form unique id 
         user_pk=urlsafe_base64_decode(uidb64).decode('utf-8')
-        user=get_object_or_404(User,pk= user_pk)
-        if request.method == "POST":
-            reset_password_form=ChangePasswordForm(request.POST)
-            if reset_password_form.is_valid():
-                current_password=reset_password_form.cleaned_data['old_password']
-                new_password=reset_password_form.cleaned_data['new_password']
+        try:
+            user = User.objects.get(pk=user_pk)
+            if request.method == "POST":
+                reset_password_form=ChangePasswordForm(request.POST)
+                if reset_password_form.is_valid():
+                    current_password=reset_password_form.cleaned_data['old_password']
+                    new_password=reset_password_form.cleaned_data['new_password']
 
-                if not user.check_password(current_password):
-                    messages.error(request,"current password does not match")
-                elif current_password == new_password:
-                    messages.error(request,"new password can't be same as old password")
-                else:
-                    user.set_password(new_password)
-                    user.save()
-                    messages.success(request,"password is changed")
-                    return redirect('accounts:logout')
-        elif request.method == "GET":
-            reset_password_form=ChangePasswordForm()
-        return render(request,'accounts/reset_password.html',{'form':reset_password_form})
+                    if not user.check_password(current_password):
+                        messages.error(request,"current password does not match")
+                    elif current_password == new_password:
+                        messages.error(request,"new password is same as current password")
+                    else:
+                        user.set_password(new_password)
+                        user.save()
+                        messages.success(request,"password is changed")
+                        return redirect('accounts:logout')
+            elif request.method == "GET":
+                reset_password_form=ChangePasswordForm()
+            return render(request,'accounts/reset_password.html',{'form':reset_password_form})
+        except User.DoesNotExist:
+            return HttpResponse("user does not exists for password change")
 
     @method_decorator(login_required(login_url='accounts:login'))
     def user_dashboard(self,request,user_pk):
@@ -230,8 +233,13 @@ class UserAuthentication(TemplateView):
                 In GET : render a dashboard page
         """
         # get user object from primarkey
-        user=get_object_or_404(User,pk=user_pk)
-        return render(request, 'accounts/dashboard.html',{'user': user})
+        try :
+            user = User.objects.get(pk=user_pk)
+            
+            return render(request, 'accounts/dashboard.html',{'user': user})
+        except User.DoesNotExist:
+            return HttpResponse("user does not exists")
+            
 
     def activate_user(self,request,uidb64,token):
         """
@@ -246,8 +254,12 @@ class UserAuthentication(TemplateView):
         """
         # get user object form unique id 
         user_pk = urlsafe_base64_decode(uidb64).decode('utf-8')
-        user = get_object_or_404(User,pk=user_pk) 
-        user.is_active =True  # activate user for login
-        user.save()
-        messages.success(request,'user registered susscess fully')
-        return redirect('accounts:login')
+        try:
+            user = User.objects.get(pk=user_pk)
+            user.is_active =True  # activate user for login
+            user.save()
+            messages.success(request,'user registered susscess fully')
+            return redirect('accounts:login')
+        except User.DoesNotExist:
+            return HttpResponse("user does not exists to activate")
+            
