@@ -1,8 +1,3 @@
-from accounts.forms import UserSignUpForm,UserLoginForm,ChangePasswordForm,UserProfileForm
-from accounts.token import token_generator
-from accounts.utils import send_email
-from accounts.models import UserProfile
-
 from django.contrib import messages
 from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.decorators import login_required
@@ -17,13 +12,32 @@ from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_decode,urlsafe_base64_encode
 from django.views.generic import TemplateView
+from django.http import Http404
+
+from accounts.forms import UserSignUpForm,UserLoginForm,ChangePasswordForm,UserProfileForm
+from accounts.token import token_generator
+from accounts.utils import send_email
+from accounts.models import UserProfile
 
 
 class IndexView(TemplateView):
+    """
+        index page 
+        
+        Arguments:
+            request (HttpRequest)
+            
+        Returns:
+            In GET : render a index page
+        
+    """
     template_name = 'accounts/index.html'
 
 
 class UserAuthentication(TemplateView):
+    """
+        custom user authentication class
+    """
 
     def dispatch(self,request,**kwargs):
         if request.path == '/accounts/login':
@@ -43,9 +57,15 @@ class UserAuthentication(TemplateView):
 
     def signupview(self,request):
         """ 
-            get userdetails for register user,
-            register without user activation,
-            send mail for user activation
+            register user without user activate and link for user activation
+        
+            Arguments:
+                request (HttpRequest)
+                
+            Returns:
+                In GET : render a signup page
+                In Post: create user and send link for user activation and redirect to login
+            
         """
         if request.method == "POST":
             signup_form = UserSignUpForm(request.POST or None)
@@ -91,11 +111,15 @@ class UserAuthentication(TemplateView):
         """ 
             User Login View
             
+            Arguments:
+                request (HttpRequest)
+            
             Required parameter:
                 username,password
-            
-            user can login if user is activate 
-            redirect to dashboard with 
+                
+            Returns:
+                In GET : render a login page
+                In Post: login if user is active  and redirect to dashboard
         """
         if request.method == "POST":
             login_form =UserLoginForm(request.POST)
@@ -135,9 +159,13 @@ class UserAuthentication(TemplateView):
     @method_decorator(login_required(login_url='accounts:login'))
     def forget_password_request(self,request):
         """ 
-            get user details,
-            generate forget password link,
-            send link using email on user's email address
+            generate forger password link for email sendig
+            
+            Arguments:
+                request (HttpRequest)
+                
+            Returns:
+                In GET : send forget password link in user' email and redirect dashboard
         """
         # generate token and unique id for forgetpassword
         uid=urlsafe_base64_encode(force_bytes(request.user.pk))
@@ -153,13 +181,23 @@ class UserAuthentication(TemplateView):
 
     @method_decorator(login_required(login_url='accounts:login'))
     def reset_password(self,request,uidb64,token):
-        """
-            get current password and new pssword and reset password,
-            change password if current password is correct
+        """            
+            get reset password of user
+            
+            Arguments:
+                request (HttpRequest),
+                uidb64, token
+            
+            Required parameter:
+                current password,new password
+                
+            Returns:
+                In GET : render a reset password page
+                In Post: change password if current password is correct and redirect to logout
         """
         # get user object form unique id 
         user_pk=urlsafe_base64_decode(uidb64).decode('utf-8')
-        user= get_object_or_404(User,pk=user_pk)
+        user=get_object_or_404(User,pk= user_pk)
         if request.method == "POST":
             reset_password_form=ChangePasswordForm(request.POST)
             if reset_password_form.is_valid():
@@ -175,7 +213,6 @@ class UserAuthentication(TemplateView):
                     user.save()
                     messages.success(request,"password is changed")
                     return redirect('accounts:logout')
-
         elif request.method == "GET":
             reset_password_form=ChangePasswordForm()
         return render(request,'accounts/reset_password.html',{'form':reset_password_form})
@@ -183,22 +220,34 @@ class UserAuthentication(TemplateView):
     @method_decorator(login_required(login_url='accounts:login'))
     def user_dashboard(self,request,user_pk):
         """
-            get user primary key,
-            show user details
+            show user profile
+            
+            Arguments:
+                request (HttpRequest)
+                user_pk : user primary key
+                
+            Returns:
+                In GET : render a dashboard page
         """
         # get user object from primarkey
-        user = get_object_or_404(User, pk=user_pk)
+        user=get_object_or_404(User,pk=user_pk)
         return render(request, 'accounts/dashboard.html',{'user': user})
 
     def activate_user(self,request,uidb64,token):
         """
-            activate user for login 
+            activate user for login
+            
+            Arguments:
+                request (HttpRequest)
+                uidb64,token
+
+            Returns:
+                In GET : set user is_active = True (activate user) and redirect login page
         """
         # get user object form unique id 
         user_pk = urlsafe_base64_decode(uidb64).decode('utf-8')
-        user= get_object_or_404(User,pk=user_pk)
+        user = get_object_or_404(User,pk=user_pk) 
         user.is_active =True  # activate user for login
         user.save()
         messages.success(request,'user registered susscess fully')
         return redirect('accounts:login')
-        

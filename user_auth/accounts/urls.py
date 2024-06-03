@@ -1,4 +1,5 @@
 from django.urls import path
+
 from accounts.views import IndexView,UserAuthentication
 
 app_name="accounts"
