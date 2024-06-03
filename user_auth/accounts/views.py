@@ -12,7 +12,6 @@ from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_decode,urlsafe_base64_encode
 from django.views.generic import TemplateView
-from django.http import Http404
 
 from accounts.forms import UserSignUpForm,UserLoginForm,ChangePasswordForm,UserProfileForm
 from accounts.token import token_generator
@@ -51,7 +50,7 @@ class UserAuthentication(TemplateView):
         elif '/accounts/reset-password' in request.path :
             return self.reset_password(request,**kwargs)
         elif '/accounts/dashboard' in request.path :
-            return self.user_dashboard(request,**kwargs)
+            return self.user_dashboard(request)
         elif '/accounts/activate-user' in request.path:
             return self.activate_user(request,**kwargs)
 
@@ -142,11 +141,11 @@ class UserAuthentication(TemplateView):
                     return redirect('accounts:login')
                 else:
                     login(request, user)
-                    return redirect(reverse('accounts:dashboard',args=[user.pk]))
+                    return redirect('accounts:dashboard')
 
         elif request.method =="GET":
             if request.user.is_authenticated:
-                return redirect(reverse('accounts:dashboard',args=[request.user.pk]))
+                return redirect('accounts:dashboard')
             login_form =UserLoginForm()
         return render(request,'accounts/login.html',{'form':login_form})
 
@@ -177,7 +176,7 @@ class UserAuthentication(TemplateView):
         text_content = strip_tags(html_content)
         send_email(subject,text_content,request.user,html_content)
         messages.info(request,"check mail for forget password link")
-        return redirect(reverse('accounts:dashboard',args=[request.user.pk]))
+        return redirect('accounts:dashboard')
 
     @method_decorator(login_required(login_url='accounts:login'))
     def reset_password(self,request,uidb64,token):
@@ -221,21 +220,19 @@ class UserAuthentication(TemplateView):
             return HttpResponse("user does not exists for password change")
 
     @method_decorator(login_required(login_url='accounts:login'))
-    def user_dashboard(self,request,user_pk):
+    def user_dashboard(self,request):
         """
             show user profile
             
             Arguments:
                 request (HttpRequest)
-                user_pk : user primary key
                 
             Returns:
                 In GET : render a dashboard page
         """
         # get user object from primarkey
         try :
-            user = User.objects.get(pk=user_pk)
-            
+            user = User.objects.get(pk=request.user.pk)
             return render(request, 'accounts/dashboard.html',{'user': user})
         except User.DoesNotExist:
             return HttpResponse("user does not exists")
