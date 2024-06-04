@@ -5,8 +5,7 @@ from accounts.views import IndexView,UserAuthentication
 app_name="accounts"
 urlpatterns = [
     path("",IndexView.as_view(),name='index'),
-    # path("accounts/",,name='accounts')
-    path("accounts/login",UserAuthentication.as_view(),name='login'),
+    path("accounts/login/",UserAuthentication.as_view(),name='login'),
     path("accounts/signup",UserAuthentication.as_view(),name='signup'),
     path("accounts/logout",UserAuthentication.as_view(),name='logout'),
     path("accounts/dashboard",UserAuthentication.as_view(),name='dashboard'),

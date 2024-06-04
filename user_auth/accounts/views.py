@@ -6,7 +6,6 @@ from django.http.request import HttpRequest as HttpRequest
 from django.http.response import HttpResponse as HttpResponse
 from django.shortcuts import render,redirect
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.html import strip_tags
@@ -39,7 +38,7 @@ class UserAuthentication(TemplateView):
     """
 
     def dispatch(self,request,**kwargs):
-        if request.path == '/accounts/login':
+        if request.path == '/accounts/login/':
             return self.loginview(request)
         elif request.path == '/accounts/logout':
             return self.logoutview(request)
@@ -130,7 +129,7 @@ class UserAuthentication(TemplateView):
                 if not User.objects.filter(username=username).exists():
                     messages.error(request,'you have not signed up ')
                     return redirect('accounts:signup')
-                elif not User.objects.get(username=username).is_active: 
+                elif not User.objects.get(username=username).is_active:
                     messages.error(request,'user is not active')
                     messages.error(request,'check mail for user activation link')
                     return redirect('accounts:login')
