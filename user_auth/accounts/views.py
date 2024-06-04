@@ -45,12 +45,12 @@ class UserAuthentication(TemplateView):
             return self.logoutview(request)
         elif request.path == '/accounts/signup':
             return self.signupview(request)
+        elif request.path == '/accounts/dashboard':
+            return self.user_dashboard(request)
         elif request.path == '/accounts/forget-password':
             return self.forget_password_request(request)
         elif '/accounts/reset-password' in request.path :
             return self.reset_password(request,**kwargs)
-        elif '/accounts/dashboard' in request.path :
-            return self.user_dashboard(request)
         elif '/accounts/activate-user' in request.path:
             return self.activate_user(request,**kwargs)
 
@@ -166,10 +166,15 @@ class UserAuthentication(TemplateView):
             Returns:
                 In GET : send forget password link in user' email and redirect dashboard
         """
-        # generate token and unique id for forgetpassword
+        # generate token and unique id for forgetpassword and storing in database
+        userprofile= UserProfile.objects.get(pk=request.user.userprofile.pk)
+        if not userprofile.forget_password_token:
+            token = token_generator.make_token(request.user)
+            userprofile.forget_password_token =token
+            userprofile.save()
+        else:
+            token= userprofile.forget_password_token
         uid=urlsafe_base64_encode(force_bytes(request.user.pk))
-        token = token_generator.make_token(request.user)
-        # print(f'uid = {uid}, token  = {token}')
         # send mail for forget password link
         subject=f'forget password link for {request.user.username}'
         html_content = render_to_string('email_templates/forget_password_link.html',{'token':token,'uid':uid})
@@ -194,10 +199,10 @@ class UserAuthentication(TemplateView):
                 In GET : render a reset password page
                 In Post: change password if current password is correct and redirect to logout
         """
-        # get user object form unique id 
-        user_pk=urlsafe_base64_decode(uidb64).decode('utf-8')
+        # get user object from url token
         try:
-            user = User.objects.get(pk=user_pk)
+            userprofile = UserProfile.objects.get(forget_password_token=token)
+            user = User.objects.get(pk=userprofile.user.pk)
             if request.method == "POST":
                 reset_password_form=ChangePasswordForm(request.POST)
                 if reset_password_form.is_valid():
@@ -211,6 +216,9 @@ class UserAuthentication(TemplateView):
                     else:
                         user.set_password(new_password)
                         user.save()
+                        # deleting token after password change successfully
+                        userprofile.forget_password_token=None
+                        userprofile.save()
                         messages.success(request,"password is changed")
                         return redirect('accounts:logout')
             elif request.method == "GET":
@@ -236,7 +244,6 @@ class UserAuthentication(TemplateView):
             return render(request, 'accounts/dashboard.html',{'user': user})
         except User.DoesNotExist:
             return HttpResponse("user does not exists")
-            
 
     def activate_user(self,request,uidb64,token):
         """

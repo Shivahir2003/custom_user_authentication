@@ -1,12 +1,12 @@
-from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 
 def send_email(subject,text_content,user,html_content):
     """
         send mail 
         
-            Arguments:
-                subject, text_content,user,html_content
+        Arguments:
+            subject, text_content,user,html_content
 
     """
     email_from = settings.EMAIL_HOST_USER
