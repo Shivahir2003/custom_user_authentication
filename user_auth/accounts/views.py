@@ -166,7 +166,7 @@ class UserAuthentication(TemplateView):
             Returns:
                 In GET : send forget password link in user' email and redirect dashboard
         """
-        # generate token and unique id for forgetpassword and storing in database
+        # generate token and unique id for forgetpassword and storing token in database
         userprofile= UserProfile.objects.get(pk=request.user.userprofile.pk)
         if not userprofile.forget_password_token:
             token = token_generator.make_token(request.user)
@@ -216,7 +216,7 @@ class UserAuthentication(TemplateView):
                     else:
                         user.set_password(new_password)
                         user.save()
-                        # deleting token after password change successfully
+                        # expiring token after password change successfully
                         userprofile.forget_password_token=None
                         userprofile.save()
                         messages.success(request,"password is changed")
@@ -226,6 +226,8 @@ class UserAuthentication(TemplateView):
             return render(request,'accounts/reset_password.html',{'form':reset_password_form})
         except User.DoesNotExist:
             return HttpResponse("user does not exists for password change")
+        except UserProfile.DoesNotExist:
+            return HttpResponse("<h1>token must be expired generate new token</h1>")
 
     @method_decorator(login_required(login_url='accounts:login'))
     def user_dashboard(self,request):
